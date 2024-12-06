@@ -56,30 +56,57 @@ local function updateSpeed(scale)
     local newSpeed = math.floor(minSpeed + (maxSpeed - minSpeed) * scale)
     humanoid.WalkSpeed = newSpeed
     SpeedText.Text = "Speed: " .. newSpeed
-    Slider.Position = UDim2.new(scale, 0, 0, 0)
+    Slider.Position = UDim2.new(scale - Slider.Size.X.Scale / 2, 0, 0, 0)
 end
 
 -- Detect drag on the slider
 local UIS = game:GetService("UserInputService")
-local dragging = false
+local draggingSlider = false
+local draggingFrame = false
+local dragStart
+local startPos
 
 Slider.MouseButton1Down:Connect(function()
-    dragging = true
+    draggingSlider = true
 end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
+        draggingSlider = false
+        draggingFrame = false
     end
 end)
 
 UIS.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+    if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
         local mousePos = UIS:GetMouseLocation().X
         local frameStart = Frame.AbsolutePosition.X
         local frameWidth = Frame.AbsoluteSize.X
         local scale = math.clamp((mousePos - frameStart) / frameWidth, 0, 1)
         updateSpeed(scale)
+    elseif draggingFrame and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Dragging functionality for the frame
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingFrame = true
+        dragStart = input.Position
+        startPos = Frame.Position
+    end
+end)
+
+Frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingFrame = false
     end
 end)
 
